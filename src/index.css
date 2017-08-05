@@ -1,0 +1,103 @@
+html {
+  background: #F5F5F5;
+	width: 100%;
+	height: 100%;
+}
+body {
+	width: 100%;
+	height: 100%;
+}
+.boardWrapper {
+  display: flex;
+	justify-content: center;
+	align-items: center;
+  width: 100%;
+	height: 100%;
+}
+.hex {
+    float: left;
+    margin-left: 3px;
+    margin-bottom: -26px;
+}
+.hex-row {
+    clear: left;
+}
+.hex-row.even {
+    margin-left: 53px;
+}
+
+/* Null node */
+.hex .top {
+    width: 0;
+    border-bottom: 30px solid #F5F5F5;
+    border-left: 52px solid transparent;
+    border-right: 52px solid transparent;
+}
+.hex .middle {
+    width: 104px;
+    height: 60px;
+    background: #F5F5F5;
+}
+.hex .bottom {
+    width: 0;
+    border-top: 30px solid #F5F5F5;
+    border-left: 52px solid transparent;
+    border-right: 52px solid transparent;
+}
+
+/* EMPTY */
+.hex .top.EMPTY {
+    width: 0;
+    border-bottom: 30px solid #eaeaea;
+    border-left: 52px solid transparent;
+    border-right: 52px solid transparent;
+}
+.hex .middle.EMPTY {
+    width: 104px;
+    height: 60px;
+    background: #eaeaea;
+}
+.hex .bottom.EMPTY {
+    width: 0;
+    border-top: 30px solid #eaeaea;
+    border-left: 52px solid transparent;
+    border-right: 52px solid transparent;
+}
+
+/* LIGHT */
+.hex .top.WHITE {
+    width: 0;
+    border-bottom: 30px solid #60E1E0;
+    border-left: 52px solid transparent;
+    border-right: 52px solid transparent;
+}
+.hex .middle.WHITE {
+    width: 104px;
+    height: 60px;
+    background: #60E1E0;
+}
+.hex .bottom.WHITE {
+    width: 0;
+    border-top: 30px solid #60E1E0;
+    border-left: 52px solid transparent;
+    border-right: 52px solid transparent;
+}
+
+/* DARK */
+.hex .top.BLACK {
+    width: 0;
+    border-bottom: 30px solid #6369D1;
+    border-left: 52px solid transparent;
+    border-right: 52px solid transparent;
+}
+.hex .middle.BLACK {
+    width: 104px;
+    height: 60px;
+    background: #6369D1;
+}
+.hex .bottom.BLACK {
+    width: 0;
+    border-top: 30px solid #6369D1;
+    border-left: 52px solid transparent;
+    border-right: 52px solid transparent;
+}
