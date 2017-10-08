@@ -138,15 +138,18 @@ export default class Hive extends PureComponent {
 
 	_renderBoard() {
 		const { numberKeys, minY, maxY, minX, maxX } = this.sortBoard();
+		/*
+			Have to go left 1x for every -2y we go up. So the left most is either minX or minimum computed from minimum of y axis
+		*/
+		let leftBorder = Math.min(minX, -1 - Math.floor(Math.abs(minY)/2));
 
 		const hexes = [];
 		let rowCounter = 0;
 		for (let y=minY; y<=maxY; y++) {
 			let rowItems = [];
-			let rowStart = minX;
+			let rowStart = leftBorder;
 			if (y<0) rowStart = rowStart + Math.floor(Math.abs(y)/2); // shift left if the row is -2 or greater
 			if (y>0) rowStart = rowStart - Math.ceil(y/2); // shift right if the row is greater than 0
-
 			rowStart--;
 			for (let x=rowStart; x<=maxX; x++) {
 				// get top node (a tile or an empty slot) or don't display a slot
