@@ -9,26 +9,25 @@ export default class Hive extends PureComponent {
 	constructor() {
 		super();
 		this.state = {
-      board: Map(),
-      turn: 1,
-      curPlayer: Colors.WHITE,
+			board: Map(),
+			turn: 1,
+			curPlayer: Colors.WHITE,
 			tempMoveState: {
 				node: new Node({ type: NodeTypes.QUEEN, color: Colors.WHITE })
 			}
-    };
-
+    	};
 		this.changeNodeType = this.changeNodeType.bind(this);
 	}
 
 	componentDidMount() {
 		// set the initial board (a single spot for a player to place the first tile)
-    this.setBoard(this.state.board.set('0~0', List([emptyNode()])));
+    	this.setBoard(this.state.board.set('0~0', List([emptyNode()])));
 	}
 
 	/*
 	*	This is the only function that will update the current board state
 	*/
-  setBoard(newBoard) {
+  	setBoard(newBoard) {
 		this.setState({ board: newBoard });
 	}
 
@@ -66,30 +65,32 @@ export default class Hive extends PureComponent {
 		let over = false;
 
 		// get the queens
-    let queens = List();
-    this.state.board.forEach((tileSlot, k) => {
-      tileSlot.forEach(node => {
-        if (node.type === NodeTypes.QUEEN) queens = queens.push(k);
-      });
-    });
+		let queens = List();
+		this.state.board.forEach((tileSlot, k) => {
+		tileSlot.forEach(node => {
+			if (node.type === NodeTypes.QUEEN) queens = queens.push(k);
+		});
+		});
 
 		// check if either of the queens is completely surrounded
 		queens.forEach(key => {
 			let { x, y } = fromKey(key);
 			if (isSurrounded({ x, y, board: this.state.board })) over = true;
 		})
-    return over;
-  }
+		return over;
+  	}
 
 	userSpecifiedMove({ move }) {
-		const nextBoard = addNode({ ...move, board: this.state.board });
-		return nextBoard;
+		return addNode({ ...move, board: this.state.board });
 	}
 
 	changeNodeType(e){
 		this.setState({ tempMoveState: { node: new Node({ type: e.target.value, color: this.state.tempMoveState.node.color }) } });
 	}
 
+	/*
+	* Sort the board so that it can be rendered properly
+	*/
 	sortBoard() {
 		let minY = Infinity;
 		let maxY = -Infinity;
@@ -115,7 +116,8 @@ export default class Hive extends PureComponent {
 	}
 
 	_renderHex({ node = {}, x, y }) {
-		const makeUserSpecifiedMove = () => this.nextBoard({ move: {
+		const makeUserSpecifiedMove = () => this.nextBoard({
+			move: {
 				...this.state.tempMoveState, x, y
 			}
 		});
