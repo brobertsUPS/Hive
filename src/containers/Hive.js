@@ -1,32 +1,34 @@
 import React, { PureComponent } from "react";
-import { Map, List } from "immutable";
+import { List } from "immutable";
 
 import { fromKey } from "../utility/Directions";
-import { Node, Colors, NodeTypes, emptyNode } from "../utility/NodeFunctions";
-import {
-  getTopNode,
-  isSurrounded,
-  possibleMoves,
-  addNode
-} from "../utility/BoardFunctions";
+import Node, { Colors, NodeTypes } from "../utility/NodeFunctions";
+import Board from "../utility/Board";
 
-export default class Hive extends PureComponent {
+type Point = { x: number, y: number };
+type Props = {};
+type State = {
+  board: Board,
+  turn: number,
+  curPlayer: Color,
+  curTile: Node
+};
+
+export default class Hive extends PureComponent<Props, State> {
   constructor() {
     super();
     this.state = {
-      board: Map(),
+      board: new Board(),
       turn: 1,
       curPlayer: Colors.WHITE,
-      tempMoveState: {
-        node: new Node({ type: NodeTypes.QUEEN, color: Colors.WHITE })
-      }
+      curTile: new Node({ type: NodeTypes.QUEEN, color: Colors.WHITE })
     };
     this.changeNodeType = this.changeNodeType.bind(this);
   }
 
   componentDidMount() {
     // set the initial board (a single spot for a player to place the first tile)
-    this.setBoard(this.state.board.set("0~0", List([emptyNode()])));
+    this.setBoard(this.state.board.set("0~0", List([Node.emptyNode()])));
   }
 
   /*
@@ -40,11 +42,11 @@ export default class Hive extends PureComponent {
 	* @param move the move to make { x, y, node }
 	* @param AIMove true if this is a move for the AI to make
 	*/
-  nextBoard({ move, AIMove }) {
+  nextBoard(point: Point, AIMove = false) {
     if (AIMove) {
-      this.setBoard(this.userSpecifiedMove({ move })); // no AI Yet :)
+      this.setBoard(this.userSpecifiedMove(point, this.state.curTile)); // no AI Yet :)
     } else {
-      this.setBoard(this.userSpecifiedMove({ move }));
+      this.setBoard(this.userSpecifiedMove(point, this.state.curTile));
     }
 
     this.setState(prevState => {
@@ -57,14 +59,16 @@ export default class Hive extends PureComponent {
     });
     this.setState(prevState => {
       return {
-        tempMoveState: {
-          node: new Node({
-            type: prevState.tempMoveState.node.type,
-            color: prevState.curPlayer
-          })
-        }
+        curTile: new Node({
+          ...prevState.curTile,
+          color: prevState.curPlayer
+        })
       };
     });
+  }
+
+  userSpecifiedMove(point, node) {
+    return this.state.board.addNode(point, node);
   }
 
   /*
@@ -84,24 +88,18 @@ export default class Hive extends PureComponent {
 
     // check if either of the queens is completely surrounded
     queens.forEach(key => {
-      let { x, y } = fromKey(key);
-      if (isSurrounded({ x, y, board: this.state.board })) over = true;
+      let point = fromKey(key);
+      if (this.state.board.isSurrounded(point)) over = true;
     });
     return over;
   }
 
-  userSpecifiedMove({ move }) {
-    return addNode({ ...move, board: this.state.board });
-  }
-
   changeNodeType(e) {
     this.setState({
-      tempMoveState: {
-        node: new Node({
-          type: e.target.value,
-          color: this.state.tempMoveState.node.color
-        })
-      }
+      curTile: new Node({
+        type: e.target.value,
+        color: this.state.color
+      })
     });
   }
 
@@ -135,11 +133,8 @@ export default class Hive extends PureComponent {
   _renderHex({ node = {}, x, y }) {
     const makeUserSpecifiedMove = () =>
       this.nextBoard({
-        move: {
-          ...this.state.tempMoveState,
-          x,
-          y
-        }
+        x,
+        y
       });
     return (
       <div className={`hex`} onClick={makeUserSpecifiedMove}>
@@ -157,14 +152,13 @@ export default class Hive extends PureComponent {
   }
 
   _renderBoard() {
-    const { numberKeys, minY, maxY, minX, maxX } = this.sortBoard();
+    const { minY, maxY, minX, maxX } = this.sortBoard();
     /*
 			Have to go left 1x for every -2y we go up. So the left most is either minX or minimum computed from minimum of y axis
 		*/
     let leftBorder = Math.min(minX, -1 - Math.floor(Math.abs(minY) / 2));
 
     const hexes = [];
-    let rowCounter = 0;
     for (let y = minY; y <= maxY; y++) {
       let rowItems = [];
       let rowStart = leftBorder;
@@ -173,7 +167,7 @@ export default class Hive extends PureComponent {
       rowStart--;
       for (let x = rowStart; x <= maxX; x++) {
         // get top node (a tile or an empty slot) or don't display a slot
-        const node = getTopNode({ x, y, board: this.state.board });
+        const node = this.state.board.topNode({ x, y });
         rowItems.push(this._renderHex({ node, x, y }));
       }
       hexes.push(this._renderHexRow({ even: y % 2 === 0, rowItems }));
@@ -182,7 +176,7 @@ export default class Hive extends PureComponent {
   }
 
   render() {
-    const { numberKeys, minY, maxY, minX, maxX } = this.sortBoard();
+    const { minY, maxY, minX, maxX } = this.sortBoard();
     const hexes = this._renderBoard();
 
     return (
@@ -190,10 +184,10 @@ export default class Hive extends PureComponent {
         type:{" "}
         <input
           type="text"
-          value={this.state.tempMoveState.node.type}
+          value={this.state.curTile.type}
           onChange={this.changeNodeType}
         />
-        color: {this.state.tempMoveState.node.color}
+        color: {this.state.curTile.color}
         <br />
         <div>
           minX:{minX} maxX:{maxX}
