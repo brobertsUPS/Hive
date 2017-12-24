@@ -34,7 +34,7 @@ export default class Hive extends PureComponent<Props, State> {
   /*
 	*	This is the only function that will update the current board state
 	*/
-  setBoard(newBoard) {
+  setBoard(newBoard: Board) {
     this.setState({ board: newBoard });
   }
 
@@ -67,7 +67,7 @@ export default class Hive extends PureComponent<Props, State> {
     });
   }
 
-  userSpecifiedMove(point, node) {
+  userSpecifiedMove(point: Point, node: Node): Board {
     return this.state.board.addNode(point, node);
   }
 
@@ -75,7 +75,7 @@ export default class Hive extends PureComponent<Props, State> {
 	* Determines if the a queen has been completely surrounded
 	*	@return true if a queen has been completely surrounded
 	*/
-  isOver() {
+  isOver(): boolean {
     let over = false;
 
     // get the queens
@@ -127,7 +127,7 @@ export default class Hive extends PureComponent<Props, State> {
       if (n !== 0) return n;
       return a.x - b.x;
     });
-    return { numberKeys, minY, maxY, minX, maxX };
+    return { minY, maxY, minX, maxX };
   }
 
   _renderHex({ node = {}, x, y }) {
