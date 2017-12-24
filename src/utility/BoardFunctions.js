@@ -64,7 +64,12 @@ export const moveNode = ({ fromX, fromY, toX, toY, board }) => {
 	return addNode({ x: toX, y: toY, node, board: newBoard });
 }
 
-/* Tile Moves */
+/*
+*	Tile Moves
+* Rules:
+*				1) Freedom of movement
+*				2) Connected Hive
+*/
 export const canMoveNode = ({ fromX, fromY, toX, toY, board }) => {
 	// use the node move rules to check
 	const node = getTopNode({ x: fromX, y: fromY, board });
