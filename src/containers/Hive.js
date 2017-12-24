@@ -21,7 +21,9 @@ export default class Hive extends PureComponent<Props, State> {
       board: new Board(),
       turn: 1,
       curPlayer: Colors.WHITE,
-      curTile: new Node({ type: NodeTypes.QUEEN, color: Colors.WHITE })
+      curTile: new Node({ type: NodeTypes.QUEEN, color: Colors.WHITE }),
+      winner: null,
+      AIEnabled: true
     };
     this.changeNodeType = this.changeNodeType.bind(this);
   }
@@ -45,7 +47,8 @@ export default class Hive extends PureComponent<Props, State> {
 	*/
   nextBoard(point: Point, AIMove = false) {
     if (AIMove) {
-      this.setBoard(this.userSpecifiedMove(point, this.state.curTile)); // no AI Yet :)
+      this.setBoard(this.aiMove());
+      //this.setBoard(this.userSpecifiedMove(point, this.state.curTile)); // no AI Yet :)
     } else {
       this.setBoard(this.userSpecifiedMove(point, this.state.curTile));
     }
@@ -66,6 +69,23 @@ export default class Hive extends PureComponent<Props, State> {
         })
       };
     });
+  }
+
+  aiMove(): Board {
+    const possibleBoardStates = this.state.board.possibleSpotsToPlace(
+      this.state.curTile
+    );
+    // get all possible board states
+    // pick one
+
+    // Game over if AI can't move
+    if (possibleBoardStates.size === 0) {
+      this.setState({ winner: "WHITE" });
+      return this.state.board;
+    }
+
+    console.log(possibleBoardStates.last());
+    return possibleBoardStates.last();
   }
 
   userSpecifiedMove(point: Point, node: Node): Board {
@@ -181,6 +201,8 @@ export default class Hive extends PureComponent<Props, State> {
   render() {
     const { minY, maxY, minX, maxX } = this.sortBoard();
     const hexes = this._renderBoard();
+    if (this.state.AIEnabled && this.state.curPlayer === Colors.BLACK)
+      this.nextBoard(null, true);
 
     return (
       <div>

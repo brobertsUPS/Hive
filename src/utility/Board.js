@@ -105,16 +105,6 @@ export default class Board extends Map {
     return matchingColor && !conflictingColor;
   }
 
-  possibleMoves() {
-    // return List of all possible keys ['0~0', '1~0', ...]
-    let moves = List();
-    this.forEach((v, k) => {
-      const point = fromKey(k);
-      if (this.isEmptyNode(point)) moves = moves.push(k);
-    });
-    return moves;
-  }
-
   /**
    * Return the score on the board for each player
    * BLACK: Positive is better
@@ -146,5 +136,18 @@ export default class Board extends Map {
 
   queens(): { BLACK?: string, WHITE?: string } {
     return { BLACK: this.get("BLACK_QUEEN"), WHITE: this.get("WHITE_QUEEN") };
+  }
+
+  possibleSpotsToPlace(node) {
+    // return List of all possible keys ['0~0', '1~0', ...]
+    let moves = List();
+    this.filter(
+      (v, key) => key !== "BLACK_QUEEN" && key !== "WHITE_QUEEN"
+    ).forEach((v, k) => {
+      const point = fromKey(k);
+      if (this.isEmptyNode(point))
+        moves = moves.push(this.addNode(point, node));
+    });
+    return moves;
   }
 }
