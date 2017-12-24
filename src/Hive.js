@@ -1,72 +1,88 @@
 import React, { PureComponent } from "react";
 import { List } from "immutable";
 
-import { fromKey } from "../utility/Directions";
-import Node, { Colors, NodeTypes } from "../utility/NodeFunctions";
-import Board from "../utility/Board";
+import Board from "./stores/Board";
+import Player from "./stores/Player";
+import Tile from "./stores/Tile";
+
+import { TileTypes } from "./static/Tile";
+import { Colors } from "./static/Player";
+
+import { fromKey } from "./utility/Directions";
 
 type Point = { x: number, y: number };
 type Props = {};
 type State = {
+  maxie: Player,
+  minnie: Player,
   board: Board,
-  turn: number,
-  curPlayer: Color,
-  curTile: Node
+  curPlayer: Player,
+  curTile: Tile,
+  winner: Player
 };
 
 export default class Hive extends PureComponent<Props, State> {
   constructor() {
     super();
     this.state = {
+      maxie: null,
+      minnie: null,
       board: new Board(),
-      turn: 1,
-      curPlayer: Colors.WHITE,
-      curTile: new Node({ type: NodeTypes.QUEEN, color: Colors.WHITE }),
+      curPlayer: null,
+      curTile: null,
       winner: null,
       AIEnabled: true
     };
-    this.changeNodeType = this.changeNodeType.bind(this);
+  }
+
+  componentWillMount() {
+    // set up the players
+    const maxie = new Player("BLACK");
+    const minnie = new Player("WHITE", true);
+    this.setState({
+      maxie,
+      minnie,
+      curPlayer: maxie,
+      curTile: maxie.tiles[0]
+    });
   }
 
   componentDidMount() {
     // set the initial board (a single spot for a player to place the first tile)
-    this.setBoard(this.state.board.set("0~0", List([Node.emptyNode()])));
+    this.setBoard(this.state.board.set("0~0", List([Tile.emptyTile()])));
   }
 
   /*
 	*	This is the only function that will update the current board state
 	*/
   setBoard(newBoard: Board) {
-    window.curBoard = newBoard;
     this.setState({ board: newBoard });
   }
 
-  /*
-	* @param move the move to make { x, y, node }
-	* @param AIMove true if this is a move for the AI to make
-	*/
-  nextBoard(point: Point, AIMove = false) {
-    if (AIMove) {
+  setCurrentTile(tile) {
+    this.setState({ curTile: tile });
+  }
+
+  nextBoard(point?: Point) {
+    if (this.state.curPlayer.AIEnabled) {
       this.setBoard(this.aiMove());
       //this.setBoard(this.userSpecifiedMove(point, this.state.curTile)); // no AI Yet :)
     } else {
+      this.state.curPlayer.removeTile(this.state.curTile);
       this.setBoard(this.userSpecifiedMove(point, this.state.curTile));
     }
 
     this.setState(prevState => {
       return {
         curPlayer:
-          prevState.curPlayer === Colors.WHITE ? Colors.BLACK : Colors.WHITE, // swap players
-        turn:
-          prevState.turn === Colors.BLACK ? prevState.turn + 1 : prevState.turn // increment turn if tiles are BLACK
+          prevState.curPlayer.color === Colors.WHITE
+            ? prevState.maxie
+            : prevState.minnie // swap players
       };
     });
     this.setState(prevState => {
       return {
-        curTile: new Node({
-          ...prevState.curTile,
-          color: prevState.curPlayer
-        })
+        curTile: prevState.curPlayer.tiles[0]
       };
     });
   }
@@ -88,8 +104,8 @@ export default class Hive extends PureComponent<Props, State> {
     return possibleBoardStates.last();
   }
 
-  userSpecifiedMove(point: Point, node: Node): Board {
-    return this.state.board.addNode(point, node);
+  userSpecifiedMove(point: Point, tile: Tile): Board {
+    return this.state.board.addTile(point, tile);
   }
 
   /*
@@ -102,8 +118,8 @@ export default class Hive extends PureComponent<Props, State> {
     // get the queens
     let queens = List();
     this.state.board.forEach((tileSlot, k) => {
-      tileSlot.forEach(node => {
-        if (node.type === NodeTypes.QUEEN) queens = queens.push(k);
+      tileSlot.forEach(tile => {
+        if (tile.type === TileTypes.QUEEN) queens = queens.push(k);
       });
     });
 
@@ -113,15 +129,6 @@ export default class Hive extends PureComponent<Props, State> {
       if (this.state.board.isSurrounded(point)) over = true;
     });
     return over;
-  }
-
-  changeNodeType(e) {
-    this.setState({
-      curTile: new Node({
-        type: e.target.value,
-        color: this.state.color
-      })
-    });
   }
 
   /*
@@ -153,7 +160,7 @@ export default class Hive extends PureComponent<Props, State> {
     return { minY, maxY, minX, maxX };
   }
 
-  _renderHex({ node = {}, x, y }) {
+  _renderHex({ tile = {}, x, y }) {
     const makeUserSpecifiedMove = () =>
       this.nextBoard({
         x,
@@ -161,11 +168,11 @@ export default class Hive extends PureComponent<Props, State> {
       });
     return (
       <div className={`hex`} onClick={makeUserSpecifiedMove}>
-        <div className={`top ${node.color}`} />
-        <div className={`middle ${node.color}`}>
-          {node.type || "null"} {node.color || "null"} {x} {y}
+        <div className={`top ${tile.color}`} />
+        <div className={`middle ${tile.color}`}>
+          {tile.type || "null"} {tile.color || "null"} {x} {y}
         </div>
-        <div className={`bottom ${node.color}`} />
+        <div className={`bottom ${tile.color}`} />
       </div>
     );
   }
@@ -189,9 +196,9 @@ export default class Hive extends PureComponent<Props, State> {
       if (y > 0) rowStart = rowStart - Math.ceil(y / 2); // shift right if the row is greater than 0
       rowStart--;
       for (let x = rowStart; x <= maxX; x++) {
-        // get top node (a tile or an empty slot) or don't display a slot
-        const node = this.state.board.topNode({ x, y });
-        rowItems.push(this._renderHex({ node, x, y }));
+        // get top tile (a tile or an empty slot) or don't display a slot
+        const tile = this.state.board.topTile({ x, y });
+        rowItems.push(this._renderHex({ tile, x, y }));
       }
       hexes.push(this._renderHexRow({ even: y % 2 === 0, rowItems }));
     }
@@ -201,19 +208,10 @@ export default class Hive extends PureComponent<Props, State> {
   render() {
     const { minY, maxY, minX, maxX } = this.sortBoard();
     const hexes = this._renderBoard();
-    if (this.state.AIEnabled && this.state.curPlayer === Colors.BLACK)
-      this.nextBoard(null, true);
+    if (this.state.curPlayer.AIEnabled) this.nextBoard();
 
     return (
       <div>
-        type:{" "}
-        <input
-          type="text"
-          value={this.state.curTile.type}
-          onChange={this.changeNodeType}
-        />
-        color: {this.state.curTile.color}
-        <br />
         <div>
           minX:{minX} maxX:{maxX}
         </div>
@@ -221,8 +219,41 @@ export default class Hive extends PureComponent<Props, State> {
           minY:{minY} maxY:{maxY}
         </div>
         <br />
+        {/* BLACK */}
+        <div>
+          MAXIE:
+          {this.state.maxie.tiles.map(tile => {
+            return (
+              <div onClick={() => this.setCurrentTile(tile)}>
+                {tile.type}
+                <span>
+                  {this.state.curPlayer.color === this.state.maxie.color &&
+                    tile.type === this.state.curTile.type &&
+                    "ACTIVE"}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
         <div className="boardWrapper">
           <div className="board">{hexes}</div>
+        </div>
+        {/* WHITE */}
+        <div>
+          MINNIE:
+          {this.state.minnie.tiles.map(tile => {
+            return (
+              <div onClick={() => this.setCurrentTile(tile)}>
+                {tile.type}
+                <span>
+                  {this.state.curPlayer.color === this.state.minnie.color &&
+                    tile.type === this.state.curTile.type &&
+                    "ACTIVE"}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
     );
