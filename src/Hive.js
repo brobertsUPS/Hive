@@ -31,7 +31,7 @@ export default class Hive extends PureComponent<Props, State> {
       curPlayer: null,
       curTile: null,
       winner: null,
-      AIEnabled: true
+      isAI: true
     };
   }
 
@@ -64,9 +64,8 @@ export default class Hive extends PureComponent<Props, State> {
   }
 
   nextBoard(point?: Point) {
-    if (this.state.curPlayer.AIEnabled) {
+    if (this.state.curPlayer.isAI) {
       this.setBoard(this.aiMove());
-      //this.setBoard(this.userSpecifiedMove(point, this.state.curTile)); // no AI Yet :)
     } else {
       this.state.curPlayer.removeTile(this.state.curTile);
       this.setBoard(this.userSpecifiedMove(point, this.state.curTile));
@@ -208,7 +207,7 @@ export default class Hive extends PureComponent<Props, State> {
   render() {
     const { minY, maxY, minX, maxX } = this.sortBoard();
     const hexes = this._renderBoard();
-    if (this.state.curPlayer.AIEnabled) this.nextBoard();
+    if (this.state.curPlayer.isAI) this.nextBoard();
 
     return (
       <div>
