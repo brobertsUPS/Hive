@@ -9,8 +9,8 @@ export const NodeTypes = {
 };
 
 export const Colors = {
-  BLACK: "BLACK",
-  WHITE: "WHITE",
+  BLACK: "BLACK", // Maxie
+  WHITE: "WHITE", // Minnie
   EMPTY: "EMPTY"
 };
 

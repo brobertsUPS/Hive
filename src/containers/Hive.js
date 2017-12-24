@@ -35,6 +35,7 @@ export default class Hive extends PureComponent<Props, State> {
 	*	This is the only function that will update the current board state
 	*/
   setBoard(newBoard: Board) {
+    window.curBoard = newBoard;
     this.setState({ board: newBoard });
   }
 
@@ -113,14 +114,16 @@ export default class Hive extends PureComponent<Props, State> {
     let maxX = -Infinity;
     // sort by x then y
     const [...ks] = this.state.board.keys();
-    let numberKeys = ks.map(key => {
-      let { x, y } = fromKey({ key });
-      minY = Math.min(minY, y);
-      maxY = Math.max(maxY, y);
-      minX = Math.min(minX, x);
-      maxX = Math.max(maxX, x);
-      return { x: x, y: y };
-    });
+    let numberKeys = ks
+      .filter(key => key !== "BLACK_QUEEN" && key !== "WHITE_QUEEN")
+      .map(key => {
+        let { x, y } = fromKey(key);
+        minY = Math.min(minY, y);
+        maxY = Math.max(maxY, y);
+        minX = Math.min(minX, x);
+        maxX = Math.max(maxX, x);
+        return { x: x, y: y };
+      });
     // sort by y value first
     numberKeys.sort((a, b) => {
       let n = a.y - b.y;

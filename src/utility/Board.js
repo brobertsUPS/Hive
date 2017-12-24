@@ -52,6 +52,10 @@ export default class Board extends Map {
       newBoard = newBoard.set(nodeKey, newList);
     } else newBoard = newBoard.set(nodeKey, List([node])); // was empty so we can set this one as completely empty
 
+    // Cache the queens so we can quickly calculate a heuristic for the board
+    if (node.type === NodeTypes.QUEEN)
+      newBoard = newBoard.set(`${node.color}_${node.type}`, nodeKey);
+
     return newBoard.addEmptyNodesAround(point);
   }
 
@@ -109,5 +113,38 @@ export default class Board extends Map {
       if (this.isEmptyNode(point)) moves = moves.push(k);
     });
     return moves;
+  }
+
+  /**
+   * Return the score on the board for each player
+   * BLACK: Positive is better
+   * WHITE: Negative is better
+   */
+  score(): { BLACK: number, WHITE: number } {
+    const playerScores = { BLACK: 0, WHITE: 0 };
+    if (this.queens().BLACK) {
+      const location: string = this.queens().BLACK;
+      const locationPoint: Point = fromKey(location);
+      playerScores.BLACK = directionFunctions.reduce((acc, direction) => {
+        const node = this.topNode(direction(locationPoint));
+        if (node.type !== NodeTypes.EMPTY) acc++;
+        return acc;
+      }, 0);
+    }
+
+    if (this.queens().WHITE) {
+      const location: string = this.queens().WHITE;
+      const locationPoint: Point = fromKey(location);
+      playerScores.WHITE = directionFunctions.reduce((acc, direction) => {
+        const node = this.topNode(direction(locationPoint));
+        if (node.type !== NodeTypes.EMPTY) acc--;
+        return acc;
+      }, 0);
+    }
+    return playerScores;
+  }
+
+  queens(): { BLACK?: string, WHITE?: string } {
+    return { BLACK: this.get("BLACK_QUEEN"), WHITE: this.get("WHITE_QUEEN") };
   }
 }
