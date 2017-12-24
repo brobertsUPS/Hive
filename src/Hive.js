@@ -221,16 +221,12 @@ export default class Hive extends PureComponent<Props, State> {
         <br />
         {/* BLACK */}
         <div>
-          MAXIE:
-          {this.state.maxie.tiles.map(tile => {
+          <div>Player: {this.state.curPlayer.color}</div>
+          {this.state.curPlayer.tiles.map(tile => {
             return (
               <div onClick={() => this.setCurrentTile(tile)}>
                 {tile.type}
-                <span>
-                  {this.state.curPlayer.color === this.state.maxie.color &&
-                    tile.type === this.state.curTile.type &&
-                    "ACTIVE"}
-                </span>
+                <span>{tile.type === this.state.curTile.type && "ACTIVE"}</span>
               </div>
             );
           })}
@@ -238,22 +234,6 @@ export default class Hive extends PureComponent<Props, State> {
 
         <div className="boardWrapper">
           <div className="board">{hexes}</div>
-        </div>
-        {/* WHITE */}
-        <div>
-          MINNIE:
-          {this.state.minnie.tiles.map(tile => {
-            return (
-              <div onClick={() => this.setCurrentTile(tile)}>
-                {tile.type}
-                <span>
-                  {this.state.curPlayer.color === this.state.minnie.color &&
-                    tile.type === this.state.curTile.type &&
-                    "ACTIVE"}
-                </span>
-              </div>
-            );
-          })}
         </div>
       </div>
     );
