@@ -31,9 +31,14 @@ export default class Board extends Map {
   isSurrounded(point) {
     let surrounded = true;
     directionFunctions.forEach(direction => {
-      const neighborKey = key(direction(point));
-      if (this.has(neighborKey) && this.topTile(point) === TileTypes.EMPTY)
-        surrounded = false;
+      const neighborPoint = direction(point);
+      const neighborKey = key(neighborPoint);
+
+      if (this.has(neighborKey)) {
+        const topTile = this.topTile(neighborPoint);
+        const isTopTileEmpty = topTile.type === TileTypes.EMPTY;
+        if (isTopTileEmpty) surrounded = false;
+      }
     });
     return surrounded;
   }
@@ -43,7 +48,6 @@ export default class Board extends Map {
 *	An empty tile is anywhere the board is available
 */
   addTile(point, tile) {
-    console.log("addTo: " + JSON.stringify(this.toJS()));
     let newBoard = this;
     const tileKey = key(point);
     const tileSlot = newBoard.get(tileKey);
@@ -113,8 +117,9 @@ export default class Board extends Map {
    */
   score(): { BLACK: number, WHITE: number } {
     const playerScores = { BLACK: 0, WHITE: 0 };
-    if (this.queens().BLACK) {
-      const location: string = this.queens().BLACK;
+    // calculate each score based on the number of tiles surrounding the opponents queen
+    if (this.queens().WHITE) {
+      const location: string = this.queens().WHITE;
       const locationPoint: Point = fromKey(location);
       playerScores.BLACK = directionFunctions.reduce((acc, direction) => {
         const tile = this.topTile(direction(locationPoint));
@@ -123,8 +128,8 @@ export default class Board extends Map {
       }, 0);
     }
 
-    if (this.queens().WHITE) {
-      const location: string = this.queens().WHITE;
+    if (this.queens().BLACK) {
+      const location: string = this.queens().BLACK;
       const locationPoint: Point = fromKey(location);
       playerScores.WHITE = directionFunctions.reduce((acc, direction) => {
         const tile = this.topTile(direction(locationPoint));
@@ -147,8 +152,27 @@ export default class Board extends Map {
     ).forEach((v, k) => {
       const point = fromKey(k);
       if (this.isEmptyTile(point))
-        moves = moves.push(this.addTile(point, tile));
+        moves = moves.push({ tile, board: this.addTile(point, tile) });
     });
     return moves;
+  }
+
+  /**
+   * What is the best score the user could get looking ahead depth?
+   */
+  bestMove(board, tiles, depth) {
+    // All possible board states where the user places a tile
+    let spotsToPlace = [];
+    tiles.forEach(tile => {
+      spotsToPlace = [...spotsToPlace, ...this.possibleSpotsToPlace(tile)];
+    });
+
+    // All possible board states where the user moves a tile on the board
+    const spotsToMove = [];
+
+    // Total of all possible board states
+    const possibleBoardStates = [...spotsToPlace, ...spotsToMove];
+
+    return possibleBoardStates[0];
   }
 }

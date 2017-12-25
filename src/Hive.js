@@ -5,7 +5,6 @@ import Board from "./stores/Board";
 import Player from "./stores/Player";
 import Tile from "./stores/Tile";
 
-import { TileTypes } from "./static/Tile";
 import { Colors } from "./static/Player";
 
 import { fromKey } from "./utility/Directions";
@@ -18,7 +17,8 @@ type State = {
   board: Board,
   curPlayer: Player,
   curTile: Tile,
-  winner: Player
+  winner: Player,
+  turn: number
 };
 
 export default class Hive extends PureComponent<Props, State> {
@@ -31,23 +31,20 @@ export default class Hive extends PureComponent<Props, State> {
       curPlayer: null,
       curTile: null,
       winner: null,
-      isAI: true
+      turn: 1
     };
   }
 
   componentWillMount() {
     // set up the players
-    const maxie = new Player("BLACK");
-    const minnie = new Player("WHITE", true);
+    const maxie = new Player("BLACK", true, 1);
+    const minnie = new Player("WHITE", true, 1);
     this.setState({
       maxie,
       minnie,
       curPlayer: maxie,
       curTile: maxie.tiles[0]
     });
-  }
-
-  componentDidMount() {
     // set the initial board (a single spot for a player to place the first tile)
     this.setBoard(this.state.board.set("0~0", List([Tile.emptyTile()])));
   }
@@ -67,65 +64,57 @@ export default class Hive extends PureComponent<Props, State> {
     if (this.state.curPlayer.isAI) {
       this.setBoard(this.aiMove());
     } else {
-      this.state.curPlayer.removeTile(this.state.curTile);
       this.setBoard(this.userSpecifiedMove(point, this.state.curTile));
     }
 
     this.setState(prevState => {
+      const nextPlayer =
+        prevState.curPlayer.color === Colors.WHITE
+          ? prevState.maxie
+          : prevState.minnie; // swap players
       return {
-        curPlayer:
-          prevState.curPlayer.color === Colors.WHITE
-            ? prevState.maxie
-            : prevState.minnie // swap players
-      };
-    });
-    this.setState(prevState => {
-      return {
-        curTile: prevState.curPlayer.tiles[0]
+        curTile: nextPlayer.tiles[0],
+        curPlayer: nextPlayer,
+        turn:
+          nextPlayer.color === "BLACK" ? prevState.turn + 1 : prevState.turn,
+        winner: this.isOver(prevState.board, nextPlayer)
+          ? prevState.curPlayer
+          : null
       };
     });
   }
 
   aiMove(): Board {
-    const possibleBoardStates = this.state.board.possibleSpotsToPlace(
-      this.state.curTile
+    const { tile, board } = this.state.board.bestMove(
+      this.state.board,
+      this.state.curPlayer.tiles,
+      this.state.curPlayer.intelligence
     );
-    // get all possible board states
-    // pick one
-
-    // Game over if AI can't move
-    if (possibleBoardStates.size === 0) {
-      this.setState({ winner: "WHITE" });
-      return this.state.board;
-    }
-
-    console.log(possibleBoardStates.last());
-    return possibleBoardStates.last();
+    this.state.curPlayer.removeTile(tile);
+    return board;
   }
 
   userSpecifiedMove(point: Point, tile: Tile): Board {
+    this.state.curPlayer.removeTile(this.state.curTile);
     return this.state.board.addTile(point, tile);
   }
 
   /*
 	* Determines if the a queen has been completely surrounded
-	*	@return true if a queen has been completely surrounded
-	*/
-  isOver(): boolean {
+  */
+  isOver(nextBoard, nextPlayer): boolean {
+    if (nextPlayer.tiles.length === 0) return true;
     let over = false;
 
     // get the queens
-    let queens = List();
-    this.state.board.forEach((tileSlot, k) => {
-      tileSlot.forEach(tile => {
-        if (tile.type === TileTypes.QUEEN) queens = queens.push(k);
-      });
-    });
-
+    const { BLACK, WHITE } = nextBoard.queens();
+    const queens = [];
+    if (BLACK) queens.push(BLACK);
+    if (WHITE) queens.push(WHITE);
     // check if either of the queens is completely surrounded
     queens.forEach(key => {
       let point = fromKey(key);
-      if (this.state.board.isSurrounded(point)) over = true;
+      if (nextBoard.isSurrounded(point)) over = true;
     });
     return over;
   }
@@ -206,17 +195,25 @@ export default class Hive extends PureComponent<Props, State> {
 
   render() {
     const { minY, maxY, minX, maxX } = this.sortBoard();
+    const { BLACK, WHITE } = this.state.board.score();
     const hexes = this._renderBoard();
-    if (this.state.curPlayer.isAI) this.nextBoard();
+    if (this.state.curPlayer.isAI && !this.state.winner) this.nextBoard();
 
     return (
       <div>
+        <div>
+          {this.state.winner && <div>WINNER: {this.state.winner.color}!</div>}
+        </div>
         <div>
           minX:{minX} maxX:{maxX}
         </div>
         <div>
           minY:{minY} maxY:{maxY}
         </div>
+        <br />
+        <div>BLACK: {BLACK}</div>
+        <br />
+        <div>WHITE: {WHITE}</div>
         <br />
         {/* BLACK */}
         <div>

@@ -4,10 +4,11 @@ export default class Player {
   color: string = "";
   tiles: Array<Tile> = [];
   isAI: boolean = false;
-  constructor(color: string, isAI: boolean) {
+  constructor(color: string, isAI: boolean, intelligence?: number) {
     this.color = color;
     this.tiles = this.buildTileBag();
     this.isAI = isAI;
+    this.intelligence = intelligence;
   }
 
   removeTile(tile) {

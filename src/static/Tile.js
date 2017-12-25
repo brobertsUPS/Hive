@@ -9,7 +9,7 @@ export const TileTypes = {
 
 export const TileCounts = {
   QUEEN: 1,
-  ANT: 1,
+  ANT: 5,
   GRASSHOPPER: 1,
   SPIDER: 1,
   BEETLE: 1
