@@ -1,8 +1,10 @@
+import { List } from "immutable";
+
 import Tile from "./Tile";
 import { TileCounts } from "../static/Tile";
 export default class Player {
   color: string = "";
-  tiles: Array<Tile> = [];
+  tiles: Array<Tile> = List();
   isAI: boolean = false;
   constructor(color: string, isAI: boolean, intelligence?: number) {
     this.color = color;
@@ -12,17 +14,17 @@ export default class Player {
   }
 
   removeTile(tile) {
-    const tileIndex = this.tiles.find(
+    const tileIndex = this.tiles.findIndex(
       stateTile => stateTile.type === tile.type
     );
-    this.tiles.splice(tileIndex, 1);
+    this.tiles = this.tiles.delete(tileIndex);
   }
 
   buildTileBag() {
-    let tileBag = [];
+    let tileBag = List();
     Object.keys(TileCounts).forEach(tileType => {
       for (let i = 0; i < TileCounts[tileType]; i++) {
-        tileBag.push(new Tile({ type: tileType, color: this.color }));
+        tileBag = tileBag.push(new Tile({ type: tileType, color: this.color }));
       }
     });
     return tileBag;

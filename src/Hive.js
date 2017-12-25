@@ -38,12 +38,12 @@ export default class Hive extends PureComponent<Props, State> {
   componentWillMount() {
     // set up the players
     const maxie = new Player("BLACK", true, 1);
-    const minnie = new Player("WHITE", true, 1);
+    const minnie = new Player("WHITE", false, 1);
     this.setState({
       maxie,
       minnie,
       curPlayer: maxie,
-      curTile: maxie.tiles[0]
+      curTile: maxie.tiles.first()
     });
     // set the initial board (a single spot for a player to place the first tile)
     this.setBoard(this.state.board.set("0~0", List([Tile.emptyTile()])));
@@ -73,7 +73,7 @@ export default class Hive extends PureComponent<Props, State> {
           ? prevState.maxie
           : prevState.minnie; // swap players
       return {
-        curTile: nextPlayer.tiles[0],
+        curTile: nextPlayer.tiles.first(),
         curPlayer: nextPlayer,
         turn:
           nextPlayer.color === "BLACK" ? prevState.turn + 1 : prevState.turn,
@@ -103,7 +103,7 @@ export default class Hive extends PureComponent<Props, State> {
 	* Determines if the a queen has been completely surrounded
   */
   isOver(nextBoard, nextPlayer): boolean {
-    if (nextPlayer.tiles.length === 0) return true;
+    if (nextPlayer.tiles.size === 0) return true;
     let over = false;
 
     // get the queens
